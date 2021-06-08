@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import './App.css';
 
@@ -10,22 +10,43 @@ export default function App() {
   const [images, setImages] = useState([]);
   // current page number for a new images fetching
   const [page, setPage] = useState(1);
+  // search query
+  const [query, setQuery] = useState('');
+
+  // fetching process here
+  // useCallback is needed to inform react that this function
+  // does not change any component (useEffect dependency)
+  const getPhotos = useCallback(() => {
+    let apiUrl = `https://api.unsplash.com/photos?`;
+    if (query) apiUrl = `https://api.unsplash.com/search/photos?query=${query}`;
+
+    apiUrl += `&page=${page}`;
+    apiUrl += `&client_id=${accessKey}`;
+
+    // page numbers are important for the unsplash API to send a new set of images
+    fetch(apiUrl)
+      .then(res => res.json())
+      .then(data => {
+        // check if it's a search results or not and take that data
+        const imagesFromApi = data.results ? data.results : data;
+        // if page is 1 → new array of images
+        if (page === 1) setImages(imagesFromApi);
+        // if page > 1 → append new
+        setImages((images) => [...images, ...imagesFromApi]);
+      })
+  }, [page, query]);
 
   // fetch new images when the page number changes
   useEffect(() => {
     getPhotos();
   }, [page]);
 
-  // fetching process here
-  function getPhotos() {
-    // page numbers are important for the unsplash API to send a new set of images
-    fetch(`https://api.unsplash.com/photos/?client_id=${accessKey}&page=${page}`)
-      .then(res => res.json())
-      .then(data => {
-        // append new images
-        setImages(images => [...images, ...data])
-      });
-  }
+    // search
+    function searchPhotos(e) {
+      e.preventDefault();
+      setPage(1);
+      getPhotos();
+    }
 
   // return an error if there is no access key
   if (!accessKey) {
@@ -42,8 +63,14 @@ export default function App() {
     <div className="app">
       <h1>Unsplash Image Gallery!</h1>
 
-      <form>
-        <input type="text" placeholder="Search Unsplash..." />
+      {/* search photos form */}
+      <form onSubmit={searchPhotos}>
+        <input
+          type="text"
+          placeholder="Search Unsplash..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
         <button>Search</button>
       </form>
 
