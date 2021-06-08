@@ -103,6 +103,6 @@ button:hover {
   object-fit: cover;
 }
 
-.image:nth-child(4n) {
-  grid-column-end: span 3;
-}
+/* .image:nth-child(4n) {
+  grid-column-end: span 2;
+} */

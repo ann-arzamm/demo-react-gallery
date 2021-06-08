@@ -94,7 +94,7 @@ export default function App() {
               rel="noopener noreferrer"
             >
               <img
-                src={image.urls.regular}
+                src={image.urls.small}
                 alt={image.alt_description}
               />
             </a>
